@@ -16,6 +16,8 @@ class AppColors {
   static const danger = Color(0xFFD64545);
   static const dangerSoft = Color(0xFFFCE4E4);
 
+  static const brownAccent = Color(0xFF8D6E63);
+
   static const shadow = Color(0x14167D45);
   static const primaryFaint = Color(0x59167D45);
 }

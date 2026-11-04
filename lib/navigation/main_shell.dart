@@ -1,20 +1,19 @@
 import 'package:flutter/material.dart';
 import '../core/widgets/empty_state.dart';
-import '../features/home/home_screens.dart';
+import '../features/chatbot/chatbot_screen.dart';
+import '../features/home/home_screen.dart';
+import '../features/marketplace/marketplace_screen.dart';
+import '../features/production/production_screen.dart';
 import 'app_navigation.dart';
 
-
-
-class MainShell extends StatelessWidget {    
+class MainShell extends StatelessWidget {
   const MainShell({super.key});
 
   static const _pages = <Widget>[
     HomeScreen(),
-    _TabPlaceholder(
-        title: 'Marketplace', icon: Icons.storefront_rounded, tahap: 4),
-    _TabPlaceholder(
-        title: 'Mulai Produksi', icon: Icons.spa_rounded, tahap: 5),
-    _TabPlaceholder(title: 'EcoBot', icon: Icons.smart_toy_rounded, tahap: 7),
+    MarketplaceScreen(),
+    ProductionScreen(),
+    ChatbotScreen(),
     _TabPlaceholder(title: 'Akun', icon: Icons.person_rounded, tahap: 7),
   ];
 
@@ -25,7 +24,8 @@ class MainShell extends StatelessWidget {
       builder: (context, index, _) {
         return Scaffold(
           body: Center(
-            // Dibatasi lebarnya supaya di Chrome tampil seperti layar HP.
+            // double.infinity = full screen. Ganti ke 520 kalau mau tampilan
+            // seperti kolom HP di tengah layar Chrome.
             child: ConstrainedBox(
               constraints: const BoxConstraints(maxWidth: double.infinity),
               child: IndexedStack(index: index, children: _pages),
