@@ -1,10 +1,12 @@
-enum OrderStatus { diproses, dikirim, selesai }
+enum OrderStatus { menungguPembayaran, diproses, dikirim, selesai, dibatalkan }
 
 extension OrderStatusX on OrderStatus {
   String get label => switch (this) {
+        OrderStatus.menungguPembayaran => 'Menunggu pembayaran',
         OrderStatus.diproses => 'Diproses',
         OrderStatus.dikirim => 'Dikirim',
         OrderStatus.selesai => 'Selesai',
+        OrderStatus.dibatalkan => 'Dibatalkan',
       };
 }
 
@@ -44,4 +46,15 @@ class OrderRecord {
   int get subtotal => lines.fold(0, (sum, l) => sum + l.total);
   int get total => subtotal + shipping;
   int get itemCount => lines.fold(0, (sum, l) => sum + l.qty);
+
+  OrderRecord copyWith({OrderStatus? status}) {
+    return OrderRecord(
+      id: id,
+      ownerEmail: ownerEmail,
+      date: date,
+      lines: lines,
+      shipping: shipping,
+      status: status ?? this.status,
+    );
+  }
 }

@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 import '../../models/user_account.dart';
+import '../cart/cart_controller.dart';
 
 class _Credential {
   _Credential(this.password, this.account);
@@ -79,6 +80,8 @@ class AuthController extends ChangeNotifier {
   }
 
   void logout() {
+    // Keranjang hanya untuk pengguna yang login, jadi dikosongkan saat keluar.
+    CartController.instance.clear();
     _current = null;
     notifyListeners();
   }

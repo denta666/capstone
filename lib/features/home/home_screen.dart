@@ -4,14 +4,15 @@ import '../../core/widgets/app_card.dart';
 import '../../core/widgets/category_item.dart';
 import '../../core/widgets/product_card.dart';
 import '../../data/dummy_data.dart';
+import '../../data/product_repository.dart';
+import '../../models/user_account.dart';
 import '../../navigation/app_navigation.dart';
+import '../account/auth_controller.dart';
 import '../cart/cart_button.dart';
 import '../marketplace/product_detail_screen.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
-
-  static const _userName = 'Denta'; // dummy
 
   void _info(BuildContext context, String message) {
     ScaffoldMessenger.of(context)
@@ -21,8 +22,6 @@ class HomeScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final featured = DummyData.featured;
-
     return Scaffold(
       body: SafeArea(
         child: ListView(
@@ -33,28 +32,7 @@ class HomeScreen extends StatelessWidget {
               padding: const EdgeInsets.fromLTRB(20, 12, 20, 0),
               child: Row(
                 children: [
-                  const Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'Selamat datang,',
-                          style: TextStyle(
-                            fontSize: 12,
-                            color: AppColors.textSecondary,
-                          ),
-                        ),
-                        SizedBox(height: 2),
-                        Text(
-                          'Halo, $_userName 👋',
-                          style: TextStyle(
-                            fontSize: 20,
-                            fontWeight: FontWeight.w800,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
+                  const Expanded(child: _Greeting()),
                   _RoundIconButton(
                     icon: Icons.notifications_none_rounded,
                     onTap: () => _info(context, 'Belum ada notifikasi baru'),
@@ -182,14 +160,18 @@ class HomeScreen extends StatelessWidget {
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 20),
               child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   for (final c in DummyData.categories)
-                    CategoryItem(
-                      icon: c.icon,
-                      label: c.name,
-                      onTap: () {marketplaceCategoryFilter.value = c.name;mainTabIndex.value = 1;
-            },
+                    Expanded(
+                      child: CategoryItem(
+                        icon: c.icon,
+                        label: c.name,
+                        onTap: () {
+                          marketplaceCategoryFilter.value = c.name;
+                          mainTabIndex.value = 1;
+                        },
+                      ),
                     ),
                 ],
               ),
@@ -201,28 +183,35 @@ class HomeScreen extends StatelessWidget {
               actionLabel: 'Lihat semua',
               onAction: () => mainTabIndex.value = 1,
             ),
-            SizedBox(
-              height: 252,
-              child: ListView.separated(
-                scrollDirection: Axis.horizontal,
-                padding: const EdgeInsets.symmetric(horizontal: 20),
-                itemCount: featured.length,
-                separatorBuilder: (context, index) => const SizedBox(width: 12),
-                itemBuilder: (context, i) {
-                  final p = featured[i];
-                  return SizedBox(
-                    width: 160,
-                    child: ProductCard(
-                      product: p,
-                      onTap: () => Navigator.of(context).push(
-                        MaterialPageRoute(
-                          builder: (_) => ProductDetailScreen(product: p),
+            ListenableBuilder(
+              listenable: ProductRepository.instance,
+              builder: (context, _) {
+                final featured = ProductRepository.instance.featured;
+                return SizedBox(
+                  height: 252,
+                  child: ListView.separated(
+                    scrollDirection: Axis.horizontal,
+                    padding: const EdgeInsets.symmetric(horizontal: 20),
+                    itemCount: featured.length,
+                    separatorBuilder: (context, index) =>
+                        const SizedBox(width: 12),
+                    itemBuilder: (context, i) {
+                      final p = featured[i];
+                      return SizedBox(
+                        width: 160,
+                        child: ProductCard(
+                          product: p,
+                          onTap: () => Navigator.of(context).push(
+                            MaterialPageRoute(
+                              builder: (_) => ProductDetailScreen(product: p),
+                            ),
+                          ),
                         ),
-                      ),
-                    ),
-                  );
-                },
-              ),
+                      );
+                    },
+                  ),
+                );
+              },
             ),
 
             // ---------- Pintasan Mulai Produksi ----------
@@ -294,6 +283,72 @@ class HomeScreen extends StatelessWidget {
 }
 
 // ======================= Komponen lokal =======================
+
+/// Sapaan yang mengikuti akun yang sedang login.
+class _Greeting extends StatelessWidget {
+  const _Greeting();
+
+  String _firstName(String name) {
+    final t = name.trim();
+    if (t.isEmpty) return 'Pengguna';
+    return t.split(RegExp(r'\s+')).first;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return ListenableBuilder(
+      listenable: AuthController.instance,
+      builder: (context, _) {
+        final user = AuthController.instance.current;
+        final first = user == null ? 'Tamu' : _firstName(user.name);
+
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              'Selamat datang,',
+              style: TextStyle(fontSize: 12, color: AppColors.textSecondary),
+            ),
+            const SizedBox(height: 2),
+            Text(
+              'Halo, $first 👋',
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w800),
+            ),
+            if (user == null)
+              InkWell(
+                onTap: () => mainTabIndex.value = 4,
+                child: const Padding(
+                  padding: EdgeInsets.only(top: 4),
+                  child: Text(
+                    'Masuk atau daftar',
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w700,
+                      color: AppColors.primary,
+                    ),
+                  ),
+                ),
+              )
+            else
+              Padding(
+                padding: const EdgeInsets.only(top: 4),
+                child: Text(
+                  user.role.label,
+                  style: const TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.primary,
+                  ),
+                ),
+              ),
+          ],
+        );
+      },
+    );
+  }
+}
 
 class _SectionHeader extends StatelessWidget {
   const _SectionHeader({required this.title, this.actionLabel, this.onAction});

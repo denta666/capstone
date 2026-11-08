@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import '../core/widgets/empty_state.dart';
+import '../features/account/account_screen.dart';
+import '../features/account/login_gate.dart';
 import '../features/chatbot/chatbot_screen.dart';
 import '../features/home/home_screen.dart';
 import '../features/marketplace/marketplace_screen.dart';
@@ -13,8 +14,14 @@ class MainShell extends StatelessWidget {
     HomeScreen(),
     MarketplaceScreen(),
     ProductionScreen(),
-    ChatbotScreen(),
-    _TabPlaceholder(title: 'Akun', icon: Icons.person_rounded, tahap: 7),
+    LoginGate(
+      title: 'EcoBot',
+      icon: Icons.smart_toy_rounded,
+      message:
+          'EcoBot adalah asisten pintar untuk produksi kompos dan maggot BSF. Fitur ini hanya untuk pengguna yang sudah masuk. Daftar dan masuk dulu, ya.',
+      child: ChatbotScreen(),
+    ),
+    AccountScreen(),
   ];
 
   @override
@@ -24,8 +31,6 @@ class MainShell extends StatelessWidget {
       builder: (context, index, _) {
         return Scaffold(
           body: Center(
-            // double.infinity = full screen. Ganti ke 520 kalau mau tampilan
-            // seperti kolom HP di tengah layar Chrome.
             child: ConstrainedBox(
               constraints: const BoxConstraints(maxWidth: double.infinity),
               child: IndexedStack(index: index, children: _pages),
@@ -64,30 +69,6 @@ class MainShell extends StatelessWidget {
           ),
         );
       },
-    );
-  }
-}
-
-class _TabPlaceholder extends StatelessWidget {
-  const _TabPlaceholder({
-    required this.title,
-    required this.icon,
-    required this.tahap,
-  });
-
-  final String title;
-  final IconData icon;
-  final int tahap;
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: Text(title)),
-      body: EmptyState(
-        icon: icon,
-        title: 'Halaman $title',
-        message: 'Akan dibuat di Tahap $tahap.',
-      ),
     );
   }
 }

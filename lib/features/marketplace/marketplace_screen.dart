@@ -4,6 +4,7 @@ import '../../core/widgets/empty_state.dart';
 import '../../core/widgets/primary_button.dart';
 import '../../core/widgets/product_card.dart';
 import '../../data/dummy_data.dart';
+import '../../data/product_repository.dart';
 import '../../models/product.dart';
 import '../../navigation/app_navigation.dart';
 import '../cart/cart_button.dart';
@@ -45,13 +46,20 @@ class _MarketplaceScreenState extends State<MarketplaceScreen> {
   void initState() {
     super.initState();
     marketplaceCategoryFilter.addListener(_onExternalCategory);
+    ProductRepository.instance.addListener(_onRepoChanged);
   }
 
   @override
   void dispose() {
     marketplaceCategoryFilter.removeListener(_onExternalCategory);
+    ProductRepository.instance.removeListener(_onRepoChanged);
     _searchController.dispose();
     super.dispose();
+  }
+
+  /// Dipanggil saat penjual menambah, mengubah, atau menghapus produk.
+  void _onRepoChanged() {
+    if (mounted) setState(() {});
   }
 
   /// Dipanggil saat kategori di Beranda diketuk.
@@ -65,7 +73,7 @@ class _MarketplaceScreenState extends State<MarketplaceScreen> {
   List<Product> get _results {
     final q = _query.trim().toLowerCase();
 
-    final list = DummyData.products.where((p) {
+    final list = ProductRepository.instance.visible.where((p) {
       final matchQuery = q.isEmpty ||
           p.name.toLowerCase().contains(q) ||
           p.category.toLowerCase().contains(q);

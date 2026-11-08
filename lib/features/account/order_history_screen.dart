@@ -22,7 +22,9 @@ class OrderHistoryScreen extends StatelessWidget {
         final orders = OrderController.instance.forUser(email);
 
         return Scaffold(
-          appBar: AppBar(title: const Text('Riwayat Transaksi')),
+          appBar: AppBar(
+            title: const Text('Riwayat Transaksi'),
+          ),
           body: orders.isEmpty
               ? EmptyState(
                   icon: Icons.receipt_long_outlined,
@@ -65,20 +67,44 @@ class _StatusBadge extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final (Color fg, Color bg) = switch (status) {
-      OrderStatus.diproses => (const Color(0xFF8D6E00), AppColors.warningSoft),
-      OrderStatus.dikirim => (AppColors.primary, AppColors.primarySoft),
-      OrderStatus.selesai => (Colors.white, AppColors.primary),
+      OrderStatus.menungguPembayaran => (
+          const Color(0xFFB45309),
+          const Color(0xFFFFF3CD),
+        ),
+      OrderStatus.diproses => (
+          const Color(0xFF8D6E00),
+          AppColors.warningSoft,
+        ),
+      OrderStatus.dikirim => (
+          AppColors.primary,
+          AppColors.primarySoft,
+        ),
+      OrderStatus.selesai => (
+          Colors.white,
+          AppColors.primary,
+        ),
+      _ => (
+          Colors.grey.shade700,
+          Colors.grey.shade100,
+        ),
     };
 
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+      padding: const EdgeInsets.symmetric(
+        horizontal: 10,
+        vertical: 4,
+      ),
       decoration: BoxDecoration(
         color: bg,
         borderRadius: BorderRadius.circular(20),
       ),
       child: Text(
         status.label,
-        style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: fg),
+        style: TextStyle(
+          fontSize: 11,
+          fontWeight: FontWeight.w700,
+          color: fg,
+        ),
       ),
     );
   }

@@ -6,6 +6,7 @@ import '../../core/widgets/app_image.dart';
 import '../../core/widgets/primary_button.dart';
 import '../../core/widgets/quantity_stepper.dart';
 import '../../models/product.dart';
+import '../account/login_gate.dart';
 import '../cart/cart_button.dart';
 import '../cart/cart_controller.dart';
 import '../cart/cart_screen.dart';
@@ -30,17 +31,37 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
     );
   }
 
-  void _addToCart() {
-    final ok = CartController.instance.add(_p, qty: _qty);
+  /// Menambah ke keranjang. Wajib login: tamu diarahkan ke halaman Masuk
+  /// dulu, lalu produk langsung ditambahkan setelah login berhasil.
+  Future<bool> _addAfterLogin() async {
+    final ok = await requireLogin(
+      context,
+      message: 'Masuk dulu untuk menambahkan produk ke keranjang.',
+    );
+    if (!ok || !mounted) return false;
+
+    final fullyAdded = CartController.instance.add(_p, qty: _qty);
+    if (!fullyAdded && mounted) {
+      ScaffoldMessenger.of(context)
+        ..hideCurrentSnackBar()
+        ..showSnackBar(
+          const SnackBar(
+            content: Text('Jumlah disesuaikan dengan stok maksimal'),
+          ),
+        );
+    }
+    return true;
+  }
+
+  Future<void> _addToCart() async {
+    final ok = await _addAfterLogin();
+    if (!ok || !mounted) return;
+
     ScaffoldMessenger.of(context)
       ..hideCurrentSnackBar()
       ..showSnackBar(
         SnackBar(
-          content: Text(
-            ok
-                ? '${_p.name} ditambahkan ke keranjang'
-                : 'Jumlah disesuaikan dengan stok maksimal',
-          ),
+          content: Text('${_p.name} ditambahkan ke keranjang'),
           action: SnackBarAction(
             label: 'Lihat',
             textColor: Colors.white,
@@ -50,8 +71,9 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
       );
   }
 
-  void _buyNow() {
-    CartController.instance.add(_p, qty: _qty);
+  Future<void> _buyNow() async {
+    final ok = await _addAfterLogin();
+    if (!ok || !mounted) return;
     _openCart();
   }
 
@@ -277,7 +299,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                 ),
                 const SizedBox(height: 16),
                 const Text(
-                  'Data produk, harga, dan stok pada halaman ini adalah contoh untuk demo tampilan.',
+                  'Data produk, harga, dan stok pada halaman ini adalah contoh untuk demo tampilan. Menambah ke keranjang dan checkout memerlukan akun.',
                   style: TextStyle(
                     fontSize: 11,
                     color: AppColors.textSecondary,

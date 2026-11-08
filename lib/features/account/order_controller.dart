@@ -57,10 +57,24 @@ class OrderController extends ChangeNotifier {
     return list;
   }
 
+  OrderRecord? byId(String id) {
+    for (final o in _orders) {
+      if (o.id == id) return o;
+    }
+    return null;
+  }
+
   String newId() => 'EH-${DateTime.now().millisecondsSinceEpoch}';
 
   void add(OrderRecord order) {
     _orders.add(order);
+    notifyListeners();
+  }
+
+  void updateStatus(String id, OrderStatus status) {
+    final i = _orders.indexWhere((o) => o.id == id);
+    if (i < 0) return;
+    _orders[i] = _orders[i].copyWith(status: status);
     notifyListeners();
   }
 }

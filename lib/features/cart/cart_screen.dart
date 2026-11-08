@@ -6,7 +6,11 @@ import '../../core/widgets/app_image.dart';
 import '../../core/widgets/empty_state.dart';
 import '../../core/widgets/primary_button.dart';
 import '../../core/widgets/quantity_stepper.dart';
+import '../../models/order_record.dart';
 import '../../navigation/app_navigation.dart';
+import '../account/auth_controller.dart';
+import '../account/login_gate.dart';
+import '../account/order_controller.dart';
 import 'cart_controller.dart';
 
 const int _shipping = 10000; // ongkir simulasi
@@ -166,6 +170,14 @@ class _SummaryBar extends StatelessWidget {
   }
 
   Future<void> _checkout(BuildContext context, int total) async {
+    // Checkout wajib login. Tamu diarahkan ke halaman Masuk dulu.
+    final loggedIn = await requireLogin(
+      context,
+      message:
+          'Masuk dulu untuk melanjutkan checkout. Katalog tetap bisa dilihat tanpa akun.',
+    );
+    if (!loggedIn || !context.mounted) return;
+
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
@@ -189,11 +201,37 @@ class _SummaryBar extends StatelessWidget {
     );
 
     if (confirmed == true && context.mounted) {
+      final user = AuthController.instance.current;
+      if (user == null) return;
+
+      OrderController.instance.add(
+        OrderRecord(
+          id: OrderController.instance.newId(),
+          ownerEmail: user.email,
+          date: DateTime.now(),
+          shipping: _shipping,
+          status: OrderStatus.diproses,
+          lines: [
+            for (final l in cart.lines)
+              OrderLine(
+                name: l.product.name,
+                unit: l.product.unit,
+                qty: l.qty,
+                price: l.product.price,
+              ),
+          ],
+        ),
+      );
+
       final messenger = ScaffoldMessenger.of(context);
       cart.clear();
       Navigator.of(context).pop();
       messenger.showSnackBar(
-        const SnackBar(content: Text('Pesanan simulasi berhasil dibuat')),
+        const SnackBar(
+          content: Text(
+            'Pesanan simulasi dibuat. Lihat di Akun > Riwayat transaksi',
+          ),
+        ),
       );
     }
   }
