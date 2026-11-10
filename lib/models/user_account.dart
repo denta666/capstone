@@ -22,11 +22,16 @@ class UserAccount {
   final String phone;
   final String address;
 
-  UserAccount copyWith({String? name, String? phone, String? address}) {
+  UserAccount copyWith({
+    String? name,
+    String? phone,
+    String? address,
+    UserRole? role,
+  }) {
     return UserAccount(
       name: name ?? this.name,
       email: email,
-      role: role,
+      role: role ?? this.role,
       phone: phone ?? this.phone,
       address: address ?? this.address,
     );

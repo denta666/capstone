@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/widgets/app_card.dart';
 import '../../core/widgets/primary_button.dart';
+import '../../models/seller_application.dart';
 import '../../models/user_account.dart';
 import '../production_log/production_history_screen.dart';
 import '../seller/seller_dashboard_screen.dart';
@@ -10,6 +11,7 @@ import 'edit_profile_screen.dart';
 import 'login_screen.dart';
 import 'order_history_screen.dart';
 import 'register_screen.dart';
+import 'seller_application_screen.dart';
 import 'settings_screen.dart';
 
 class AccountScreen extends StatelessWidget {
@@ -48,6 +50,15 @@ class AccountScreen extends StatelessWidget {
       AuthController.instance.logout();
       _info(context, 'Berhasil keluar');
     }
+  }
+
+  String _applicationSubtitle(SellerApplication? a) {
+    if (a == null) return 'Ajukan lewat formulir dan syarat';
+    return switch (a.status) {
+      ApplicationStatus.menunggu => 'Pengajuan menunggu verifikasi',
+      ApplicationStatus.ditolak => 'Pengajuan ditolak, bisa diajukan ulang',
+      ApplicationStatus.disetujui => 'Disetujui',
+    };
   }
 
   @override
@@ -97,7 +108,7 @@ class AccountScreen extends StatelessWidget {
             ),
             const SizedBox(height: 6),
             const Text(
-              'Katalog dan panduan produksi bisa dibuka tanpa akun. Akun dibutuhkan untuk checkout dan menyimpan riwayat transaksi.',
+              'Katalog dan panduan produksi bisa dibuka tanpa akun. Akun dibutuhkan untuk keranjang, checkout, dan EcoBot.',
               textAlign: TextAlign.center,
               style: TextStyle(
                 fontSize: 13,
@@ -135,6 +146,7 @@ class AccountScreen extends StatelessWidget {
   List<Widget> _loggedIn(BuildContext context, UserAccount user) {
     final initial =
         user.name.trim().isEmpty ? '?' : user.name.trim()[0].toUpperCase();
+    final application = AuthController.instance.applicationOf(user.email);
 
     return [
       AppCard(
@@ -223,6 +235,15 @@ class AccountScreen extends StatelessWidget {
               title: 'Riwayat produksi',
               onTap: () => _push(context, const ProductionHistoryScreen()),
             ),
+            if (user.role == UserRole.pembeli) ...[
+              const Divider(height: 1),
+              _MenuTile(
+                icon: Icons.storefront_outlined,
+                title: 'Jadi penjual / mitra',
+                subtitle: _applicationSubtitle(application),
+                onTap: () => _push(context, const SellerApplicationScreen()),
+              ),
+            ],
             if (user.role == UserRole.penjual) ...[
               const Divider(height: 1),
               _MenuTile(

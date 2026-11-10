@@ -3,10 +3,10 @@ import '../../core/theme/app_colors.dart';
 import '../../core/theme/input_style.dart';
 import '../../core/utils/validators.dart';
 import '../../core/widgets/primary_button.dart';
-import '../../models/user_account.dart';
 import 'auth_controller.dart';
 
 /// Mengembalikan true lewat Navigator.pop kalau registrasi berhasil.
+/// Semua akun baru terdaftar sebagai Pembeli.
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
 
@@ -22,7 +22,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
   final _password = TextEditingController();
   final _confirm = TextEditingController();
 
-  UserRole _role = UserRole.pembeli;
   bool _obscure = true;
   bool _loading = false;
   String? _error;
@@ -51,7 +50,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
       name: _name.text,
       email: _email.text,
       password: _password.text,
-      role: _role,
       phone: _phone.text,
     );
     if (err != null) {
@@ -71,8 +69,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final isSeller = _role == UserRole.penjual;
-
     return Scaffold(
       appBar: AppBar(title: const Text('Daftar')),
       body: Center(
@@ -87,49 +83,31 @@ class _RegisterScreenState extends State<RegisterScreen> {
               ),
               const SizedBox(height: 4),
               const Text(
-                'Katalog bisa dilihat tanpa akun. Akun dibutuhkan untuk checkout.',
+                'Katalog bisa dilihat tanpa akun. Akun dibutuhkan untuk keranjang, checkout, dan EcoBot.',
                 style: TextStyle(fontSize: 13, color: AppColors.textSecondary),
               ),
-              const SizedBox(height: 20),
-
-              const Text(
-                'Daftar sebagai',
-                style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700),
-              ),
-              const SizedBox(height: 8),
-              SegmentedButton<UserRole>(
-                segments: const [
-                  ButtonSegment(
-                    value: UserRole.pembeli,
-                    label: Text('Pembeli'),
-                    icon: Icon(Icons.shopping_bag_outlined),
-                  ),
-                  ButtonSegment(
-                    value: UserRole.penjual,
-                    label: Text('Penjual / Mitra'),
-                    icon: Icon(Icons.storefront_outlined),
-                  ),
-                ],
-                selected: {_role},
-                onSelectionChanged: (s) => setState(() => _role = s.first),
-                showSelectedIcon: false,
-                style: SegmentedButton.styleFrom(
-                  selectedBackgroundColor: AppColors.primarySoft,
-                  selectedForegroundColor: AppColors.primary,
+              const SizedBox(height: 14),
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: AppColors.primarySoft,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: const Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Icon(Icons.info_outline_rounded,
+                        size: 20, color: AppColors.primary),
+                    SizedBox(width: 10),
+                    Expanded(
+                      child: Text(
+                        'Semua akun baru terdaftar sebagai Pembeli. Ingin berjualan? Setelah masuk, ajukan menjadi Penjual / Mitra lewat menu Akun.',
+                        style: TextStyle(fontSize: 12.5, height: 1.4),
+                      ),
+                    ),
+                  ],
                 ),
               ),
-              const SizedBox(height: 8),
-              Text(
-                isSeller
-                    ? 'Penjual/Mitra mendapat akses dashboard penjual untuk mengelola produk dan pesanan.'
-                    : 'Pembeli bisa berbelanja, belajar produksi, dan mencatat hasil produksi.',
-                style: const TextStyle(
-                  fontSize: 12,
-                  height: 1.4,
-                  color: AppColors.textSecondary,
-                ),
-              ),
-
               const SizedBox(height: 20),
               Form(
                 key: _formKey,
