@@ -1,8 +1,15 @@
+import 'dart:io' show File;
+
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import '../theme/app_colors.dart';
 
-/// Menampilkan gambar aset. Kalau assetPath kosong atau file belum ada,
-/// tampil placeholder hijau dengan ikon.
+/// Menampilkan gambar. Sumber gambar dikenali dari [assetPath]:
+/// - null / kosong      -> placeholder hijau dengan ikon
+/// - `assets/...`       -> aset bawaan aplikasi
+/// - `http(s)://`/`blob:` -> gambar jaringan (termasuk foto upload di web)
+/// - path lain          -> file lokal (foto upload di Android/iOS/desktop)
+/// Kalau gagal dimuat, tampil placeholder.
 class AppImage extends StatelessWidget {
   const AppImage({
     super.key,
@@ -34,20 +41,31 @@ class AppImage extends StatelessWidget {
     );
   }
 
+  Widget _image(String path) {
+    Widget error(BuildContext context, Object error, StackTrace? stack) =>
+        _placeholder();
+
+    final isNetwork = path.startsWith('http://') ||
+        path.startsWith('https://') ||
+        path.startsWith('blob:');
+    if (isNetwork || (kIsWeb && !path.startsWith('assets/'))) {
+      return Image.network(path, fit: BoxFit.cover, errorBuilder: error);
+    }
+    if (path.startsWith('assets/')) {
+      return Image.asset(path, fit: BoxFit.cover, errorBuilder: error);
+    }
+    return Image.file(File(path), fit: BoxFit.cover, errorBuilder: error);
+  }
+
   @override
   Widget build(BuildContext context) {
+    final path = assetPath;
     return ClipRRect(
       borderRadius: BorderRadius.circular(radius),
       child: SizedBox(
         height: height,
         width: width,
-        child: assetPath == null
-            ? _placeholder()
-            : Image.asset(
-                assetPath!,
-                fit: BoxFit.cover,
-                errorBuilder: (context, error, stack) => _placeholder(),
-              ),
+        child: path == null || path.isEmpty ? _placeholder() : _image(path),
       ),
     );
   }

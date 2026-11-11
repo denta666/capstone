@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/utils/format.dart';
 import '../../core/widgets/app_card.dart';
+import '../../core/widgets/app_image.dart';
 import '../../core/widgets/empty_state.dart';
 import '../../data/product_repository.dart';
 import '../../models/product.dart';
@@ -56,7 +57,7 @@ class _ProductTile extends StatelessWidget {
   Widget build(BuildContext context) => AppCard(
         child: Row(
           children: [
-            CircleAvatar(backgroundColor: AppColors.primarySoft, child: Icon(product.icon, color: AppColors.primary)),
+            AppImage(assetPath: product.imagePath, icon: product.icon, width: 48, height: 48, radius: 12),
             const SizedBox(width: 12),
             Expanded(
               child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [

@@ -16,12 +16,16 @@ class OrderLine {
     required this.unit,
     required this.qty,
     required this.price,
+    this.productId,
   });
 
   final String name;
   final String unit;
   final int qty;
   final int price;
+
+  /// Id produk di katalog (dipakai untuk ulasan). Null untuk data lama.
+  final String? productId;
 
   int get total => qty * price;
 }

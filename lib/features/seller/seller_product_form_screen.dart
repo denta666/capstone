@@ -1,5 +1,8 @@
+import 'package:flutter/foundation.dart' show defaultTargetPlatform, kIsWeb;
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
 import '../../core/theme/app_colors.dart';
+import '../../core/widgets/app_image.dart';
 import '../../core/widgets/primary_button.dart';
 import '../../data/dummy_data.dart';
 import '../../data/product_repository.dart';
@@ -24,6 +27,10 @@ class _SellerProductFormScreenState extends State<SellerProductFormScreen> {
   late final TextEditingController _location;
   late final TextEditingController _description;
   late String _category;
+  final _picker = ImagePicker();
+
+  /// Path foto produk (file lokal, atau blob URL di web). Null = belum ada foto.
+  String? _imagePath;
 
   @override
   void initState() {
@@ -36,6 +43,7 @@ class _SellerProductFormScreenState extends State<SellerProductFormScreen> {
     _location = TextEditingController(text: product?.location ?? '');
     _description = TextEditingController(text: product?.description ?? '');
     _category = product?.category ?? DummyData.categories.first.name;
+    _imagePath = product?.imagePath;
   }
 
   @override
@@ -54,6 +62,123 @@ class _SellerProductFormScreenState extends State<SellerProductFormScreen> {
   String? _positiveInt(String? value) {
     final number = int.tryParse(value ?? '');
     return number == null || number < 0 ? 'Masukkan angka yang valid' : null;
+  }
+
+  /// Kamera hanya ditawarkan di HP; di web/desktop cukup galeri/berkas.
+  bool get _cameraAvailable =>
+      !kIsWeb &&
+      (defaultTargetPlatform == TargetPlatform.android ||
+          defaultTargetPlatform == TargetPlatform.iOS);
+
+  Future<void> _pickImage(ImageSource source) async {
+    try {
+      final picked = await _picker.pickImage(
+        source: source,
+        maxWidth: 1280,
+        maxHeight: 1280,
+        imageQuality: 80,
+      );
+      if (picked == null || !mounted) return; // dibatalkan
+      setState(() => _imagePath = picked.path);
+    } catch (_) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Foto tidak bisa dibuka. Periksa izin kamera/galeri lalu coba lagi.')),
+      );
+    }
+  }
+
+  void _showImageSourceSheet() {
+    showModalBottomSheet<void>(
+      context: context,
+      showDragHandle: true,
+      builder: (sheetContext) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            if (_cameraAvailable)
+              ListTile(
+                leading: const Icon(Icons.photo_camera_outlined),
+                title: const Text('Ambil foto'),
+                onTap: () {
+                  Navigator.of(sheetContext).pop();
+                  _pickImage(ImageSource.camera);
+                },
+              ),
+            ListTile(
+              leading: const Icon(Icons.photo_library_outlined),
+              title: Text(_cameraAvailable ? 'Pilih dari galeri' : 'Pilih foto'),
+              onTap: () {
+                Navigator.of(sheetContext).pop();
+                _pickImage(ImageSource.gallery);
+              },
+            ),
+            if (_imagePath != null)
+              ListTile(
+                leading: const Icon(Icons.delete_outline, color: AppColors.danger),
+                title: const Text('Hapus foto'),
+                onTap: () {
+                  Navigator.of(sheetContext).pop();
+                  setState(() => _imagePath = null);
+                },
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _photoPicker() {
+    final category = DummyData.categories.firstWhere(
+      (item) => item.name == _category,
+      orElse: () => DummyData.categories.first,
+    );
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text('Foto produk', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700)),
+        const SizedBox(height: 8),
+        GestureDetector(
+          onTap: _showImageSourceSheet,
+          child: AspectRatio(
+            aspectRatio: 4 / 3,
+            child: Stack(
+              fit: StackFit.expand,
+              children: [
+                AppImage(assetPath: _imagePath, icon: category.icon, radius: 16),
+                Positioned(
+                  right: 10,
+                  bottom: 10,
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                    decoration: BoxDecoration(
+                      color: Colors.black.withValues(alpha: 0.55),
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Icon(Icons.add_a_photo_outlined, size: 16, color: Colors.white),
+                        const SizedBox(width: 6),
+                        Text(
+                          _imagePath == null ? 'Tambah foto' : 'Ganti foto',
+                          style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.w600),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+        const SizedBox(height: 6),
+        const Text(
+          'Opsional. Foto yang jelas dan terang membuat produkmu lebih menarik.',
+          style: TextStyle(color: AppColors.textSecondary, fontSize: 12),
+        ),
+      ],
+    );
   }
 
   void _save() {
@@ -75,7 +200,7 @@ class _SellerProductFormScreenState extends State<SellerProductFormScreen> {
       location: _location.text.trim(),
       description: _description.text.trim(),
       icon: category.icon,
-      imagePath: old?.imagePath,
+      imagePath: _imagePath,
       ownerEmail: old?.ownerEmail ?? email,
       isActive: old?.isActive ?? true,
     );
@@ -97,6 +222,8 @@ class _SellerProductFormScreenState extends State<SellerProductFormScreen> {
         child: ListView(
           padding: const EdgeInsets.fromLTRB(20, 4, 20, 24),
           children: [
+            _photoPicker(),
+            const SizedBox(height: 18),
             TextFormField(controller: _name, decoration: const InputDecoration(labelText: 'Nama produk'), validator: _required),
             const SizedBox(height: 12),
             DropdownButtonFormField<String>(
