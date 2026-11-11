@@ -4,8 +4,10 @@ import '../../core/utils/format.dart';
 import '../../core/utils/id_format.dart';
 import '../../core/widgets/app_card.dart';
 import '../../core/widgets/empty_state.dart';
+import '../../core/widgets/primary_button.dart';
 import '../../models/order_record.dart';
 import '../../navigation/app_navigation.dart';
+import '../payment/payment_flow.dart';
 import 'auth_controller.dart';
 import 'order_controller.dart';
 
@@ -209,6 +211,51 @@ class _OrderCard extends StatelessWidget {
               ),
             ],
           ),
+          if (order.courier != null || order.method != null) ...[
+            const SizedBox(height: 8),
+            Text(
+              [
+                if (order.courier != null) 'Kurir ${order.courier}',
+                if (order.method != null) order.method!.label,
+              ].join(' \u2022 '),
+              style: const TextStyle(
+                fontSize: 11,
+                color: AppColors.textSecondary,
+              ),
+            ),
+          ],
+          if (order.address != null) ...[
+            const SizedBox(height: 4),
+            Text(
+              order.address!.summary,
+              style: const TextStyle(
+                fontSize: 11,
+                color: AppColors.textSecondary,
+              ),
+            ),
+          ],
+          if (order.note != null) ...[
+            const SizedBox(height: 4),
+            Text(
+              'Catatan: ${order.note}',
+              style: const TextStyle(
+                fontSize: 11,
+                color: AppColors.textSecondary,
+              ),
+            ),
+          ],
+          if (order.status == OrderStatus.menungguPembayaran) ...[
+            const SizedBox(height: 12),
+            PrimaryButton(
+              label: 'Bayar sekarang',
+              icon: Icons.lock_outline_rounded,
+              onPressed: () => payOrder(
+                navigator: Navigator.of(context),
+                messenger: ScaffoldMessenger.of(context),
+                order: order,
+              ),
+            ),
+          ],
         ],
       ),
     );

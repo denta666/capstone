@@ -6,14 +6,10 @@ import '../../core/widgets/app_image.dart';
 import '../../core/widgets/empty_state.dart';
 import '../../core/widgets/primary_button.dart';
 import '../../core/widgets/quantity_stepper.dart';
-import '../../models/order_record.dart';
 import '../../navigation/app_navigation.dart';
-import '../account/auth_controller.dart';
 import '../account/login_gate.dart';
-import '../account/order_controller.dart';
 import 'cart_controller.dart';
-
-const int _shipping = 10000; // ongkir simulasi
+import 'checkout_screen.dart';
 
 class CartScreen extends StatelessWidget {
   const CartScreen({super.key});
@@ -169,7 +165,7 @@ class _SummaryBar extends StatelessWidget {
     );
   }
 
-  Future<void> _checkout(BuildContext context, int total) async {
+  Future<void> _checkout(BuildContext context) async {
     // Checkout wajib login. Tamu diarahkan ke halaman Masuk dulu.
     final loggedIn = await requireLogin(
       context,
@@ -178,68 +174,13 @@ class _SummaryBar extends StatelessWidget {
     );
     if (!loggedIn || !context.mounted) return;
 
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('Checkout (simulasi)'),
-        content: Text(
-          'Total ${formatRupiah(total)}.\n\n'
-          'Ini hanya simulasi untuk demo tampilan. '
-          'Tidak ada pembayaran sungguhan.',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx, false),
-            child: const Text('Batal'),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.pop(ctx, true),
-            child: const Text('Buat pesanan'),
-          ),
-        ],
-      ),
+    Navigator.of(context).push(
+      MaterialPageRoute(builder: (_) => const CheckoutScreen()),
     );
-
-    if (confirmed == true && context.mounted) {
-      final user = AuthController.instance.current;
-      if (user == null) return;
-
-      OrderController.instance.add(
-        OrderRecord(
-          id: OrderController.instance.newId(),
-          ownerEmail: user.email,
-          date: DateTime.now(),
-          shipping: _shipping,
-          status: OrderStatus.diproses,
-          lines: [
-            for (final l in cart.lines)
-              OrderLine(
-                name: l.product.name,
-                unit: l.product.unit,
-                qty: l.qty,
-                price: l.product.price,
-              ),
-          ],
-        ),
-      );
-
-      final messenger = ScaffoldMessenger.of(context);
-      cart.clear();
-      Navigator.of(context).pop();
-      messenger.showSnackBar(
-        const SnackBar(
-          content: Text(
-            'Pesanan simulasi dibuat. Lihat di Akun > Riwayat transaksi',
-          ),
-        ),
-      );
-    }
   }
 
   @override
   Widget build(BuildContext context) {
-    final total = subtotal + _shipping;
-
     return Container(
       decoration: const BoxDecoration(
         color: Colors.white,
@@ -252,14 +193,12 @@ class _SummaryBar extends StatelessWidget {
             mainAxisSize: MainAxisSize.min,
             children: [
               _row('Subtotal', formatRupiah(subtotal)),
-              _row('Ongkos kirim (simulasi)', formatRupiah(_shipping)),
-              const Divider(height: 16),
-              _row('Total', formatRupiah(total), bold: true),
+              _row('Ongkos kirim', 'Dipilih di checkout'),
               const SizedBox(height: 12),
               PrimaryButton(
-                label: 'Checkout (simulasi)',
-                icon: Icons.lock_outline_rounded,
-                onPressed: () => _checkout(context, total),
+                label: 'Lanjut ke checkout',
+                icon: Icons.arrow_forward_rounded,
+                onPressed: () => _checkout(context),
               ),
             ],
           ),

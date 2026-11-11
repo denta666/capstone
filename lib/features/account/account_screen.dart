@@ -4,6 +4,7 @@ import '../../core/widgets/app_card.dart';
 import '../../core/widgets/primary_button.dart';
 import '../../models/seller_application.dart';
 import '../../models/user_account.dart';
+import '../feedback/feedback_screen.dart';
 import '../production_log/production_history_screen.dart';
 import '../seller/seller_dashboard_screen.dart';
 import 'auth_controller.dart';
@@ -133,10 +134,21 @@ class AccountScreen extends StatelessWidget {
       const SizedBox(height: 16),
       AppCard(
         padding: const EdgeInsets.symmetric(vertical: 4),
-        child: _MenuTile(
-          icon: Icons.settings_outlined,
-          title: 'Pengaturan',
-          onTap: () => _push(context, const SettingsScreen()),
+        child: Column(
+          children: [
+            _MenuTile(
+              icon: Icons.feedback_outlined,
+              title: 'Beri feedback',
+              subtitle: 'Saran dan masukan untuk aplikasi',
+              onTap: () => _push(context, const FeedbackScreen()),
+            ),
+            const Divider(height: 1),
+            _MenuTile(
+              icon: Icons.settings_outlined,
+              title: 'Pengaturan',
+              onTap: () => _push(context, const SettingsScreen()),
+            ),
+          ],
         ),
       ),
     ];
@@ -253,6 +265,13 @@ class AccountScreen extends StatelessWidget {
                 onTap: () => _push(context, const SellerDashboardScreen()),
               ),
             ],
+            const Divider(height: 1),
+            _MenuTile(
+              icon: Icons.feedback_outlined,
+              title: 'Beri feedback',
+              subtitle: 'Saran dan masukan untuk aplikasi',
+              onTap: () => _push(context, const FeedbackScreen()),
+            ),
             const Divider(height: 1),
             _MenuTile(
               icon: Icons.settings_outlined,

@@ -74,6 +74,16 @@ class PaymentScreen extends StatelessWidget {
                     color: AppColors.textSecondary,
                   ),
                 ),
+                if (order.method != null) ...[
+                  const SizedBox(height: 6),
+                  Text(
+                    'Metode dipilih: ${order.method!.label}',
+                    style: const TextStyle(
+                      fontSize: 12,
+                      color: AppColors.textSecondary,
+                    ),
+                  ),
+                ],
                 const Divider(height: 22),
                 for (final l in order.lines)
                   Padding(
